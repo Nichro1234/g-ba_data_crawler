@@ -1,13 +1,5 @@
-
-
-
-
-
-
-
-
-
+import xml_handler
 
 if __name__ == '__main__':
-    print_hi('PyCharm')
-
+    print(1)
+    xml_handler.initialize()

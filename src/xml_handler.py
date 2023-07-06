@@ -6,15 +6,21 @@ import xmltodict
 from utils import cleanhtml
 
 config = configparser.ConfigParser()
+config.read("config.ini", encoding="utf-8")
 
 
 def need_update():
-    config.read("config.ini", encoding="utf-8")
     last_crawled = config.get('xml_getter', "last_crawled")
+
+    xml_storage_path = config.get('xml_getter', "xml_storage_path")
+    if not os.path.exists(xml_storage_path):
+        os.mkdir(xml_storage_path)
+        return True
 
     if last_crawled == "":
         return True
     else:
+        # Check the last crawled date, if more than 10 days ago, crawl the data again
         last_crawled_list = list(map(int, last_crawled.split("-")))
         last_crawled_date = datetime.datetime(last_crawled_list[0], last_crawled_list[1], last_crawled_list[2])
         date_diff = datetime.datetime.today() - last_crawled_date
@@ -28,14 +34,18 @@ def get_xml(perma_link):
 
     filename = xml_file.headers["x-amz-meta-filename"]
     xml_content = xml_file.text
-    xml_storage_path = "..\\xml_storage"
+    xml_storage_path = config.get('xml_getter', "xml_storage_path")
+    filepath = os.path.join(xml_storage_path, filename)
 
-    with open(os.path.join(xml_storage_path, filename), "w", encoding="utf-8") as f:
+    with open(filepath, "w", encoding="utf-8") as f:
         f.write(xml_content)
 
+    # Update the config file
     today_date = str(datetime.datetime.today().date())
     config.set("xml_getter", "last_crawled", today_date)
     config.write(open("config.ini", "w", encoding="utf-8"))
+
+    return filepath
 
 
 def read_xml(path_to_xml):
@@ -46,22 +56,32 @@ def read_xml(path_to_xml):
 
 
 def extract_endpoint_results(info_dict):
-    _temp = dict()
-    _temp["benefit"] = info_dict["ZVT_ZN"]["ZN_A"]["@value"]
-    _temp["drug_name"] = info_dict["WS_BEW"]['NAME_WS_BEW']["@value"]
-    _temp["patient_group"] = cleanhtml(info_dict["NAME_PAT_GR"])
+    result = dict()
+    result["benefit"] = info_dict["ZVT_ZN"]["ZN_A"]["@value"]
+    result["drug_name"] = info_dict["WS_BEW"]['NAME_WS_BEW']["@value"]
+    result["patient_group"] = cleanhtml(info_dict["NAME_PAT_GR"])
+    result["mortality"] = info_dict['ZSF_EP_MORT']['EP_MORT_GRAF']["@value"]
+    result["morbidity"] = info_dict['ZSF_EP_MORB']['EP_MORB_GRAF']["@value"]
+    result["quality_of_life"] = info_dict['ZSF_EP_LEBQ']['EP_LEBQ_GRAF']["@value"]
+    result["side_effects"] = info_dict['ZSF_EP_UE']['EP_UE_GRAF']["@value"]
 
+    # Some medicines have multiple ICDs, therefore, we need to deal with them separately
     icd_dict = info_dict["ICD"]
     try:
-        _temp["ICD"] = [i["ID_ICD"]["@value"] for i in icd_dict]
+        result["ICD"] = [i["ID_ICD"]["@value"] for i in icd_dict]
     except TypeError:
-        _temp["ICD"] = [icd_dict["ID_ICD"]["@value"]]
+        result["ICD"] = [icd_dict["ID_ICD"]["@value"]]
 
-    _temp["mortality"] = info_dict['ZSF_EP_MORT']['EP_MORT_GRAF']["@value"]
-    _temp["morbidity"] = info_dict['ZSF_EP_MORB']['EP_MORB_GRAF']["@value"]
-    _temp["quality_of_life"] = info_dict['ZSF_EP_LEBQ']['EP_LEBQ_GRAF']["@value"]
-    _temp["side_effects"] = info_dict['ZSF_EP_UE']['EP_UE_GRAF']["@value"]
-    return _temp
+    return result
+
+
+def find_target_xml():
+    xml_storage_path = config.get('xml_getter', "xml_storage_path")
+
+    xml_list = [i for i in os.listdir(xml_storage_path) if i.endswith(".xml")]
+    xml_list.sort(reverse=True)
+
+    return os.path.join(xml_storage_path, xml_list[0])
 
 
 def parse_xml(data):
@@ -77,18 +97,32 @@ def parse_xml(data):
             benefit_assessment["is_orphan"] = i["ZUL"][0]["SOND_ZUL_ORPHAN"]["@value"]
 
         endpoint_results = []
+
+        # The | here is a way to combine the two dictionaries
         if type(i['PAT_GR_INFO_COLLECTION']['ID_PAT_GR']) != list:
-            endpoint_results.append(benefit_assessment|extract_endpoint_results(i['PAT_GR_INFO_COLLECTION']['ID_PAT_GR']))
+            endpoint_results.append(
+                benefit_assessment | extract_endpoint_results(i['PAT_GR_INFO_COLLECTION']['ID_PAT_GR'])
+            )
         else:
             for j in i['PAT_GR_INFO_COLLECTION']['ID_PAT_GR']:
-                endpoint_results.append(benefit_assessment|extract_endpoint_results(j))
+                endpoint_results.append(benefit_assessment | extract_endpoint_results(j))
 
         result_list += endpoint_results
 
     return result_list
 
 
+def initialize():
+    if need_update():
+        get_xml(config.get("xml_getter", "perma_link"))
+
+    target_xml = find_target_xml()
+    xml_results = parse_xml(read_xml(target_xml))
+    return xml_results
+
+
 if __name__ == '__main__':
     print("Start crawling...")
     if need_update():
         get_xml(config.get("xml_getter", "perma_link"))
+    find_target_xml()
