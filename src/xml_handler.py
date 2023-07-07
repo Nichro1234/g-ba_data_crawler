@@ -32,11 +32,13 @@ def need_update():
 def get_xml(perma_link):
     xml_file = requests.get(perma_link)
 
+    # The xml gives the file name designated by g-ba
     filename = xml_file.headers["x-amz-meta-filename"]
     xml_content = xml_file.text
     xml_storage_path = config.get('xml_getter', "xml_storage_path")
     filepath = os.path.join(xml_storage_path, filename)
 
+    # We need to specify the encoding since we are dealing with German language
     with open(filepath, "w", encoding="utf-8") as f:
         f.write(xml_content)
 
@@ -51,7 +53,10 @@ def get_xml(perma_link):
 def read_xml(path_to_xml):
     with open(path_to_xml, "r", encoding="utf-8") as f:
         xml_string = f.read()
+
     result = xmltodict.parse(xml_string)
+
+    # This is the place where the decision data is held
     return result['BE_COLLECTION']['BE']
 
 
@@ -91,6 +96,8 @@ def parse_xml(data):
         benefit_assessment = dict()
         benefit_assessment["URL"] = i['URL']["@value"]
 
+        # In a very scarce case, where the drug is assessed by multiple agencies, there will be multiple entries to the
+        # ZUL section. We will use the first entry.
         try:
             benefit_assessment["is_orphan"] = i["ZUL"]["SOND_ZUL_ORPHAN"]["@value"]
         except TypeError:
@@ -121,6 +128,7 @@ def initialize():
     return xml_results
 
 
+# Test Code
 if __name__ == '__main__':
     print("Start crawling...")
     if need_update():
