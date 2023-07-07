@@ -3,6 +3,9 @@ import configparser
 import re
 import time
 import logging
+import pypdf
+import io
+import os
 from bs4 import BeautifulSoup
 
 config = configparser.ConfigParser()
@@ -41,18 +44,30 @@ def extract_pdf_url(url_of_assessment):
     return "https://g-ba.de" + pdf_path
 
 
+def download_and_store_pdf(pdf_url):
+    pdf_storage_path = config.get("pdf_crawler", "pdf_storage_path")
+
+    t = requests.get(pdf_url[1], stream=True)
+    pdf = pypdf.PdfReader(io.BytesIO(t.content))
+
+    pdf_path = os.path.join(pdf_storage_path, pdf_url[0] + ".pdf")
+    pypdf.PdfWriter(open(pdf_path, "w"), pdf)
+
+    pdf_path = os.path.join(pdf_storage_path, pdf_url[0] + ".pdf")
+    pypdf.PdfWriter(open(pdf_path, "w"), pdf).write(pdf_path)
+
+
 def start_crawl(xml_results):
     xml_results = filter_target_ICD(xml_results)
 
-    pdf_urls = set()
+    pdf_urls = dict()
     for i in xml_results:
         try:
-            pdf_urls.add(extract_pdf_url(i["URL"]))
+            pdf_urls[i["drug_name"]] = extract_pdf_url(i["URL"])
             time.sleep(2)
         except IndexError:
             logging.error("Decision PDF not available for this drug")
             pass
 
-    print(pdf_urls)
-
-
+    for pdf_url in pdf_urls.items():
+        download_and_store_pdf(pdf_url)
