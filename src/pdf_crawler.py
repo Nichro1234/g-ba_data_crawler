@@ -45,6 +45,7 @@ def extract_pdf_url(url_of_assessment):
 
 
 def download_and_store_pdf(pdf_url):
+    logging.info("Crawling pdf for " + pdf_url[0])
     pdf_storage_path = config.get("pdf_crawler", "pdf_storage_path")
 
     t = requests.get(pdf_url[1], stream=True)
@@ -66,7 +67,7 @@ def start_crawl(xml_results):
             pdf_urls[i["drug_name"]] = extract_pdf_url(i["URL"])
             time.sleep(2)
         except IndexError:
-            logging.error("Decision PDF not available for this drug")
+            logging.error("Decision PDF not available for " + i["drug_name"] + ", download skipped")
             pass
 
     for pdf_url in pdf_urls.items():

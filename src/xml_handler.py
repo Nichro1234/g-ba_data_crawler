@@ -3,6 +3,8 @@ import os
 import configparser
 import datetime
 import xmltodict
+import logging
+
 from utils import cleanhtml
 
 config = configparser.ConfigParser()
@@ -15,15 +17,22 @@ def need_update():
     xml_storage_path = config.get('xml_getter', "xml_storage_path")
     if not os.path.exists(xml_storage_path):
         os.mkdir(xml_storage_path)
+        logging.info("Xml storage path does not exist, creating folder and scraping...")
+        return True
+
+    if not any(a.endswith(".xml") for a in os.listdir(xml_storage_path)):
+        logging.info("No xml found in the storage folder, crawling...")
         return True
 
     if last_crawled == "":
+        logging.info("Not crawled before, crawling")
         return True
     else:
         # Check the last crawled date, if more than 10 days ago, crawl the data again
         last_crawled_list = list(map(int, last_crawled.split("-")))
         last_crawled_date = datetime.datetime(last_crawled_list[0], last_crawled_list[1], last_crawled_list[2])
         date_diff = datetime.datetime.today() - last_crawled_date
+        logging.info("Xml last updated more than 10 days ago, crawling...")
         if date_diff.days > 10:
             return True
     return False
@@ -46,7 +55,7 @@ def get_xml(perma_link):
     today_date = str(datetime.datetime.today().date())
     config.set("xml_getter", "last_crawled", today_date)
     config.write(open("config.ini", "w", encoding="utf-8"))
-
+    logging.info("Successfully updated xml")
     return filepath
 
 
