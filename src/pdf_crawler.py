@@ -11,12 +11,14 @@ config.read("config.ini", encoding="utf-8")
 
 def filter_target_ICD(xml_results):
     target_icd = config.get("pdf_crawler", "icd")
+    # This is to allow for both "ICD,ICD" and "ICD, ICD"
     target_icd_list = re.split(",\\s?", target_icd)
 
     return [i for i in xml_results if any(a in i["ICD"] for a in target_icd_list)]
 
 
 def extract_pdf_url(url_of_assessment):
+    # For the webpage to load normally
     headers = {
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
         "Accept-Encoding": "gzip, deflate, br",
