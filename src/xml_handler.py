@@ -49,7 +49,7 @@ def get_xml(perma_link):
 
 
 def read_xml(path_to_xml):
-    with open(path_to_xml, "r") as f:
+    with open(path_to_xml, "r", encoding="utf-8") as f:
         xml_string = f.read()
     result = xmltodict.parse(xml_string)
     return result['BE_COLLECTION']['BE']
