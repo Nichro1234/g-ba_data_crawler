@@ -1,11 +1,12 @@
-import requests
-import configparser
+import io
+import logging
+import os
 import re
 import time
-import logging
+
+import configparser
 import pypdf
-import io
-import os
+import requests
 from bs4 import BeautifulSoup
 
 config = configparser.ConfigParser()

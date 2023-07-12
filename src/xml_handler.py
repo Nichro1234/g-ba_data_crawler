@@ -1,9 +1,10 @@
-import requests
-import os
 import configparser
 import datetime
-import xmltodict
 import logging
+import os
+
+import requests
+import xmltodict
 
 from utils import cleanhtml
 
@@ -106,7 +107,7 @@ def parse_xml(data):
         benefit_assessment["URL"] = i['URL']["@value"]
 
         # In a very scarce case, where the drug is assessed by multiple agencies, there will be multiple entries to the
-        # ZUL section. We will use the first entry.
+        # ZUL section (and hence multiple assessments on whether the drug is orphan). We will use the first entry.
         try:
             benefit_assessment["is_orphan"] = i["ZUL"]["SOND_ZUL_ORPHAN"]["@value"]
         except TypeError:
