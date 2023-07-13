@@ -6,7 +6,7 @@ import os
 import requests
 import xmltodict
 
-import regex_utils
+import utils
 
 config = configparser.ConfigParser()
 config.read("config.ini", encoding="utf-8")
@@ -72,13 +72,13 @@ def read_xml(path_to_xml):
 
 def extract_endpoint_results(info_dict):
     result = dict()
-    result["benefit"] = regex_utils.translate_benefit(info_dict["ZVT_ZN"]["ZN_A"]["@value"])
+    result["benefit"] = utils.translate_benefit(info_dict["ZVT_ZN"]["ZN_A"]["@value"])
     result["drug_name"] = info_dict["WS_BEW"]['NAME_WS_BEW']["@value"]
-    result["patient_group"] = regex_utils.cleanhtml(info_dict["NAME_PAT_GR"])
-    result["mortality"] = regex_utils.map_arrow_to_value(info_dict['ZSF_EP_MORT']['EP_MORT_GRAF']["@value"])
-    result["morbidity"] = regex_utils.map_arrow_to_value(info_dict['ZSF_EP_MORB']['EP_MORB_GRAF']["@value"])
-    result["quality_of_life"] = regex_utils.map_arrow_to_value(info_dict['ZSF_EP_LEBQ']['EP_LEBQ_GRAF']["@value"])
-    result["side_effects"] = regex_utils.map_arrow_to_value(info_dict['ZSF_EP_UE']['EP_UE_GRAF']["@value"])
+    result["patient_group"] = utils.cleanhtml(info_dict["NAME_PAT_GR"])
+    result["mortality"] = utils.map_arrow_to_value(info_dict['ZSF_EP_MORT']['EP_MORT_GRAF']["@value"])
+    result["morbidity"] = utils.map_arrow_to_value(info_dict['ZSF_EP_MORB']['EP_MORB_GRAF']["@value"])
+    result["quality_of_life"] = utils.map_arrow_to_value(info_dict['ZSF_EP_LEBQ']['EP_LEBQ_GRAF']["@value"])
+    result["side_effects"] = utils.map_arrow_to_value(info_dict['ZSF_EP_UE']['EP_UE_GRAF']["@value"])
 
     # Some medicines have multiple ICDs, therefore, we need to deal with them separately
     icd_dict = info_dict["ICD"]

@@ -1,6 +1,10 @@
 import re
 
+# Compile some regex in advance to reduce runtime compilation cost
 CLEANER = re.compile('<.*?>')
+
+# used to match beträchtlich
+BETRA_MATCHER = re.compile("betr\\S*chtlich")
 
 
 def cleanhtml(raw_html):
@@ -30,9 +34,9 @@ def translate_benefit(deutsch_benefit):
     if "nicht belegt" in deutsch_benefit:
         return "No Proven Benefit"
 
-    # Since the original Deutsch word beträchtlich may have problem processing the ä,
-    # we use a regex to process this part
-    if re.findall(r"betr\S*chtlich", deutsch_benefit):
+    # Since the original Deutsch word beträchtlich may cause problem when processing ä,
+    # we use a regex to process this word
+    if re.findall(BETRA_MATCHER, deutsch_benefit):
         return "Considerable Benefit"
 
     if "nicht quantifizierbar" in deutsch_benefit:
@@ -41,3 +45,11 @@ def translate_benefit(deutsch_benefit):
         return "Considerable Benefit"
     if "gering" in deutsch_benefit:
         return "Minor Benefit"
+
+
+def list_remove_duplicate(input_list):
+    result = []
+    for i in input_list:
+        if i not in result:
+            result.append(i)
+    return result
