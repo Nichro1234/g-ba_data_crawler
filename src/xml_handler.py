@@ -16,10 +16,6 @@ def need_update():
     last_crawled = config.get('xml_getter', "last_crawled")
 
     xml_storage_path = config.get('xml_getter', "xml_storage_path")
-    if not os.path.exists(xml_storage_path):
-        os.mkdir(xml_storage_path)
-        logging.info("Xml storage path does not exist, creating folder and scraping...")
-        return True
 
     if not any(a.endswith(".xml") for a in os.listdir(xml_storage_path)):
         logging.info("No xml found in the storage folder, crawling...")
@@ -130,6 +126,10 @@ def parse_xml(data):
 
 
 def initialize():
+    xml_storage_path = config.get('xml_getter', "xml_storage_path")
+    # Check if path exists or not, if not, create it
+    utils.check_create_path(xml_storage_path, path_of="xml")
+
     if need_update():
         get_xml(config.get("xml_getter", "perma_link"))
 

@@ -1,4 +1,7 @@
 import re
+import os
+
+import logging
 
 # Compile some regex in advance to reduce runtime compilation cost
 CLEANER = re.compile('<.*?>')
@@ -40,11 +43,11 @@ def translate_benefit(deutsch_benefit):
         return "Considerable Benefit"
 
     if "nicht quantifizierbar" in deutsch_benefit:
-        return "Not Quantifiable"
+        return "Non-Quantifiable Benefit"
     if "erheblich" in deutsch_benefit:
-        return "Considerable Benefit"
+        return "Considerable Additional Benefit"
     if "gering" in deutsch_benefit:
-        return "Minor Benefit"
+        return "Minor Additional Benefit"
 
 
 def list_remove_duplicate(input_list):
@@ -53,3 +56,11 @@ def list_remove_duplicate(input_list):
         if i not in result:
             result.append(i)
     return result
+
+
+def check_create_path(target_path, path_of):
+    if not os.path.exists(target_path):
+        os.mkdir(target_path)
+        logging.info(path_of + " storage path does not exist, creating folder and scraping...")
+        return False
+    return True

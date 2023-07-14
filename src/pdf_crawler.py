@@ -8,6 +8,7 @@ import configparser
 import pypdf
 import requests
 from bs4 import BeautifulSoup
+import utils
 
 config = configparser.ConfigParser()
 config.read("config.ini", encoding="utf-8")
@@ -24,7 +25,8 @@ def filter_target_ICD(xml_results):
 def extract_pdf_url(url_of_assessment):
     # For the webpage to load normally
     headers = {
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,"
+                  "application/signed-exchange;v=b3;q=0.7",
         "Accept-Encoding": "gzip, deflate, br",
         "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
         "Sec-Ch-Ua": "\"Not.A/Brand\";v=\"8\", \"Chromium\";v=\"114\", \"Google Chrome\";v=\"114\"",
@@ -35,7 +37,8 @@ def extract_pdf_url(url_of_assessment):
         "Sec-Fetch-Site": "cross-site",
         "Sec-Fetch-User": "?1",
         "Upgrade-Insecure-Requests": "1",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+                      "Chrome/114.0.0.0 Safari/537.36",
     }
 
     conn = requests.get(url_of_assessment, headers=headers)
@@ -61,6 +64,9 @@ def download_and_store_pdf(pdf_url):
 
 def start_crawl(xml_results):
     xml_results = filter_target_ICD(xml_results)
+
+    pdf_storage_path = config.get("pdf_crawler", "pdf_storage_path")
+    utils.check_create_path(pdf_storage_path, path_of="pdf")
 
     pdf_urls = dict()
     for i in xml_results:
