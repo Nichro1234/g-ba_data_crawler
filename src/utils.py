@@ -13,6 +13,7 @@ BETRA_MATCHER = re.compile("betr\\S*chtlich")
 config = configparser.ConfigParser()
 config.read("config.ini", encoding="utf-8")
 
+
 def cleanhtml(raw_html):
     clean_text = re.sub(CLEANER, '', raw_html)
     return clean_text
@@ -75,3 +76,15 @@ def filter_target_ICD(xml_results):
     target_icd_list = re.split(",\\s?", target_icd)
 
     return [i for i in xml_results if any(a in i["ICD"] for a in target_icd_list)]
+
+
+def filter_invalid_entries(xml_results):
+    results = []
+
+    for i in xml_results:
+        metrics = [i["mortality"], i["morbidity"], i["quality_of_life"], i["side_effects"]]
+        for j in metrics:
+            if j not in ["No Data", "Not Assessed"]:
+                results.append(i)
+                break
+    return results

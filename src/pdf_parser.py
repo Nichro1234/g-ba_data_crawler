@@ -110,24 +110,25 @@ def clean_up_table(table):
     return result
 
 
+def parse_target_pdf(medicine_name):
+    pdf_storage_path = config.get("pdf_crawler", "pdf_storage_path")
+
+    docx_path = convert_pdf(os.path.join(pdf_storage_path, medicine_name+".pdf"))
+    tables = extract_tables(docx_path)
+
+    result = {}
+    for endpoint_category, table in tables.items():
+        category_table = derive_metric_names(table)
+        cleaned_table = clean_up_table(category_table)
+
+        result[endpoint_category] = cleaned_table
+
+
 # Test Code
 if __name__ == '__main__':
     initialize()
 
-    pdf_storage_path = config.get("pdf_crawler", "pdf_storage_path")
-    pdf_list = os.listdir(pdf_storage_path)
-    pdf_list = [i for i in pdf_list if i.endswith(".pdf")]
 
-    for pdf_file in pdf_list:
-        docx_path = convert_pdf(os.path.join(pdf_storage_path, pdf_file))
-        tables = extract_tables(docx_path)
-
-        result = {}
-        for endpoint_category, table in tables.items():
-            category_table = derive_metric_names(table)
-            cleaned_table = clean_up_table(category_table)
-
-            result[endpoint_category] = cleaned_table
 
 
 

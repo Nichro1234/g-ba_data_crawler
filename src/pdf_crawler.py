@@ -39,17 +39,17 @@ def request_pdf_url(url_of_assessment):
     return "https://g-ba.de" + pdf_path
 
 
-def download_and_store_pdf(pdf_url):
-    logging.info("Crawling pdf for " + pdf_url[0])
+def download_and_store_pdf(drug_name, pdf_url):
+    logging.info("Crawling pdf for " + drug_name)
     pdf_storage_path = config.get("pdf_crawler", "pdf_storage_path")
 
-    t = requests.get(pdf_url[1], stream=True)
+    t = requests.get(pdf_url, stream=True)
     pdf = pypdf.PdfReader(io.BytesIO(t.content))
 
     # pdf_path = os.path.join(pdf_storage_path, pdf_url[0] + ".pdf")
     # pypdf.PdfWriter(open(pdf_path, "w"), pdf)
 
-    pdf_path = os.path.join(pdf_storage_path, pdf_url[0] + ".pdf")
+    pdf_path = os.path.join(pdf_storage_path, drug_name + ".pdf")
     pypdf.PdfWriter(open(pdf_path, "w"), pdf).write(pdf_path)
 
 
