@@ -1,31 +1,4 @@
 import re
-import copy
-
-
-def derive_metric_names(table):
-    _table = copy.deepcopy(table)
-    for i, row in enumerate(_table):
-        if len(set(row.values())) == 1:
-            _table[i] = next(iter(set(row.values())))
-    return _table
-
-
-def clean_up_table(table):
-    prev_text = "table_head"
-
-    result = {}
-    table_buffer = []
-
-    for i, row in enumerate(table):
-        if type(row) == str and table_buffer:
-            result[prev_text] = table_buffer
-            prev_text = row
-            table_buffer = []
-
-        else:
-            table_buffer.append(row)
-    result[prev_text] = table_buffer
-    return result
 
 
 def process_endpoint_result_str(result_str):

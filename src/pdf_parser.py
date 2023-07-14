@@ -1,5 +1,6 @@
 import configparser
 import os
+import copy
 
 import docx
 import utils
@@ -78,19 +79,44 @@ def extract_tables(docx_path):
     return assessment_detail_tables
 
 
-def init():
+def initialize():
     temp_storage_path = config.get("pdf_parser", "temp_path")
     utils.check_create_path(temp_storage_path, path_of="docx")
 
 
+def derive_metric_names(table):
+    _table = copy.deepcopy(table)
+    for i, row in enumerate(_table):
+        if len(set(row.values())) == 1:
+            _table[i] = next(iter(set(row.values())))
+    return _table
+
+
+def clean_up_table(table):
+    prev_text = "table_head"
+
+    result = {}
+    table_buffer = []
+
+    for i, row in enumerate(table):
+        if type(row) == str and table_buffer:
+            result[prev_text] = table_buffer
+            prev_text = row
+            table_buffer = []
+
+        else:
+            table_buffer.append(row)
+    result[prev_text] = table_buffer
+    return result
+
+
 # Test Code
 if __name__ == '__main__':
-    init()
+    initialize()
 
     pdf_storage_path = config.get("pdf_crawler", "pdf_storage_path")
     pdf_list = os.listdir(pdf_storage_path)
     pdf_list = [i for i in pdf_list if i.endswith(".pdf")]
-    import table_info_extractor
 
     for pdf_file in pdf_list:
         docx_path = convert_pdf(os.path.join(pdf_storage_path, pdf_file))
@@ -98,8 +124,8 @@ if __name__ == '__main__':
 
         result = {}
         for endpoint_category, table in tables.items():
-            category_table = table_info_extractor.derive_metric_names(table)
-            cleaned_table = table_info_extractor.clean_up_table(category_table)
+            category_table = derive_metric_names(table)
+            cleaned_table = clean_up_table(category_table)
 
             result[endpoint_category] = cleaned_table
 
