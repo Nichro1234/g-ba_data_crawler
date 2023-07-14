@@ -1,7 +1,6 @@
 import io
 import logging
 import os
-import re
 import time
 
 import configparser
@@ -14,15 +13,7 @@ config = configparser.ConfigParser()
 config.read("config.ini", encoding="utf-8")
 
 
-def filter_target_ICD(xml_results):
-    target_icd = config.get("pdf_crawler", "icd")
-    # This is to allow for both "ICD,ICD" and "ICD, ICD"
-    target_icd_list = re.split(",\\s?", target_icd)
-
-    return [i for i in xml_results if any(a in i["ICD"] for a in target_icd_list)]
-
-
-def extract_pdf_url(url_of_assessment):
+def request_pdf_url(url_of_assessment):
     # For the webpage to load normally
     headers = {
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,"
@@ -55,27 +46,13 @@ def download_and_store_pdf(pdf_url):
     t = requests.get(pdf_url[1], stream=True)
     pdf = pypdf.PdfReader(io.BytesIO(t.content))
 
-    pdf_path = os.path.join(pdf_storage_path, pdf_url[0] + ".pdf")
-    pypdf.PdfWriter(open(pdf_path, "w"), pdf)
+    # pdf_path = os.path.join(pdf_storage_path, pdf_url[0] + ".pdf")
+    # pypdf.PdfWriter(open(pdf_path, "w"), pdf)
 
     pdf_path = os.path.join(pdf_storage_path, pdf_url[0] + ".pdf")
     pypdf.PdfWriter(open(pdf_path, "w"), pdf).write(pdf_path)
 
 
-def start_crawl(xml_results):
-    xml_results = filter_target_ICD(xml_results)
-
+def initialize():
     pdf_storage_path = config.get("pdf_crawler", "pdf_storage_path")
     utils.check_create_path(pdf_storage_path, path_of="pdf")
-
-    pdf_urls = dict()
-    for i in xml_results:
-        try:
-            pdf_urls[i["drug_name"]] = extract_pdf_url(i["URL"])
-            time.sleep(2)
-        except IndexError:
-            logging.error("Decision PDF not available for " + i["drug_name"] + ", download skipped")
-            pass
-
-    for pdf_url in pdf_urls.items():
-        download_and_store_pdf(pdf_url)

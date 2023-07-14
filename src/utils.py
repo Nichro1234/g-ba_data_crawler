@@ -1,5 +1,6 @@
 import re
 import os
+import configparser
 
 import logging
 
@@ -9,6 +10,8 @@ CLEANER = re.compile('<.*?>')
 # used to match beträchtlich
 BETRA_MATCHER = re.compile("betr\\S*chtlich")
 
+config = configparser.ConfigParser()
+config.read("config.ini", encoding="utf-8")
 
 def cleanhtml(raw_html):
     clean_text = re.sub(CLEANER, '', raw_html)
@@ -64,3 +67,11 @@ def check_create_path(target_path, path_of):
         logging.info(path_of + " storage path does not exist, creating folder and scraping...")
         return False
     return True
+
+
+def filter_target_ICD(xml_results):
+    target_icd = config.get("pdf_crawler", "icd")
+    # This is to allow for both "ICD,ICD" and "ICD, ICD"
+    target_icd_list = re.split(",\\s?", target_icd)
+
+    return [i for i in xml_results if any(a in i["ICD"] for a in target_icd_list)]
