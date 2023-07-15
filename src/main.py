@@ -49,10 +49,10 @@ if __name__ == '__main__':
             i["p_value_pfs"] = pfs[1]
 
             i["pdf_format_supported"] = True
-        except ValueError:
+        except:
             i["pdf_format_supported"] = False
 
-    with open('convert.txt', 'w') as convert_file:
+    with open('convert.txt', 'w', encoding="utf-8") as convert_file:
         convert_file.write(json.dumps(filtered_valid_results))
 
     print("end")

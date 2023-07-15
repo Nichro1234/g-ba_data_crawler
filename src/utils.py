@@ -17,7 +17,8 @@ config.read("config.ini", encoding="utf-8")
 
 def cleanhtml(raw_html):
     clean_text = re.sub(CLEANER, '', raw_html)
-    return clean_text
+    remove_line_break = re.sub(r"\n", "", clean_text)
+    return remove_line_break
 
 
 def map_arrow_to_value(arrow):
@@ -76,7 +77,16 @@ def filter_target_ICD(xml_results):
     # This is to allow for both "ICD,ICD" and "ICD, ICD"
     target_icd_list = re.split(",\\s?", target_icd)
 
-    return [i for i in xml_results if any(a in i["ICD"] for a in target_icd_list)]
+    result = []
+    for i in xml_results:
+        include = False
+        for icd in i["ICD"]:
+            for j in target_icd_list:
+                if icd.startswith(j):
+                    include = True
+        if include:
+            result.append(i)
+    return result
 
 
 def filter_invalid_entries(xml_results):

@@ -151,30 +151,3 @@ def parse_target_pdf(medicine_name):
 
         result[endpoint_category] = cleaned_table
     return result
-
-
-# Test Code
-if __name__ == '__main__':
-    initialize()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

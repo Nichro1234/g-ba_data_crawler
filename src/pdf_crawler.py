@@ -42,8 +42,9 @@ def request_assessment_url(url_of_assessment):
 def download_and_store_pdf(assessment_id, pdf_url):
     logging.info("Crawling pdf for " + assessment_id)
     pdf_storage_path = config.get("pdf_crawler", "pdf_storage_path")
+    pdf_path = os.path.join(pdf_storage_path, assessment_id + ".pdf")
 
-    if os.path.exists(pdf_storage_path):
+    if os.path.exists(pdf_path):
         print("pdf exists")
     else:
         t = requests.get(pdf_url, stream=True)
@@ -51,8 +52,6 @@ def download_and_store_pdf(assessment_id, pdf_url):
 
         # pdf_path = os.path.join(pdf_storage_path, pdf_url[0] + ".pdf")
         # pypdf.PdfWriter(open(pdf_path, "w"), pdf)
-
-        pdf_path = os.path.join(pdf_storage_path, assessment_id + ".pdf")
         pypdf.PdfWriter(open(pdf_path, "w"), pdf).write(pdf_path)
 
 
