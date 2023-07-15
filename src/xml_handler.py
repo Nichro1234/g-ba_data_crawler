@@ -5,6 +5,7 @@ import os
 
 import requests
 import xmltodict
+import icd10
 
 import utils
 
@@ -29,8 +30,8 @@ def need_update():
         last_crawled_list = list(map(int, last_crawled.split("-")))
         last_crawled_date = datetime.datetime(last_crawled_list[0], last_crawled_list[1], last_crawled_list[2])
         date_diff = datetime.datetime.today() - last_crawled_date
-        logging.info("Xml last updated more than 10 days ago, crawling...")
         if date_diff.days > 10:
+            logging.info("Xml last updated more than 10 days ago, crawling...")
             return True
     return False
 
@@ -68,6 +69,8 @@ def read_xml(path_to_xml):
 
 def extract_endpoint_results(info_dict):
     result = dict()
+    result["id"] = info_dict["@value"]
+    result["date_of_decision"] = info_dict["DATUM_BE_VOM"]["@value"]
     result["benefit"] = utils.translate_benefit(info_dict["ZVT_ZN"]["ZN_A"]["@value"])
     result["drug_name"] = info_dict["WS_BEW"]['NAME_WS_BEW']["@value"]
     result["patient_group"] = utils.cleanhtml(info_dict["NAME_PAT_GR"])
@@ -82,6 +85,18 @@ def extract_endpoint_results(info_dict):
         result["ICD"] = [i["ID_ICD"]["@value"] for i in icd_dict]
     except TypeError:
         result["ICD"] = [icd_dict["ID_ICD"]["@value"]]
+
+    first_icd = result["ICD"][0].split(".")[0]
+    disease = icd10.find(first_icd)
+
+    if icd10.exists(first_icd):
+        result["Therapeutic_area"] = disease.block_description
+        if first_icd.startswith("C"):
+            result["Therapeutic_area"] = "Neoplasms"
+        result["Disease"] = disease.description
+    else:
+        result["Therapeutic_area"] = "Deprecated Code" + first_icd
+        result["Disease"] = "Deprecated Code" + first_icd
 
     return result
 
@@ -106,8 +121,10 @@ def parse_xml(data):
         # ZUL section (and hence multiple assessments on whether the drug is orphan). We will use the first entry.
         try:
             benefit_assessment["is_orphan"] = i["ZUL"]["SOND_ZUL_ORPHAN"]["@value"]
+            benefit_assessment["trade_name"] = i["ZUL"]["NAME_HN"]["@value"]
         except TypeError:
             benefit_assessment["is_orphan"] = i["ZUL"][0]["SOND_ZUL_ORPHAN"]["@value"]
+            benefit_assessment["trade_name"] = i["ZUL"][0]["NAME_HN"]["@value"]
 
         endpoint_results = []
 

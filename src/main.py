@@ -1,5 +1,6 @@
 import logging
 import time
+import json
 
 import pandas as pd
 
@@ -20,15 +21,39 @@ if __name__ == '__main__':
     pdf_crawler.initialize()
     for i in filtered_valid_results:
         try:
-            i["pdf_url"] = pdf_crawler.request_pdf_url(i["URL"])
+            html_results = pdf_crawler.request_assessment_url(i["URL"])
+            i["pdf_url"] = html_results[0]
+            i["company_name"] = html_results[1]
             time.sleep(2)
-            pdf_crawler.download_and_store_pdf(i["drug_name"], i["pdf_url"])
+            pdf_crawler.download_and_store_pdf(i["id"], i["pdf_url"])
+            time.sleep(1)
+            i["valid"] = True
         except IndexError:
-            logging.error("Decision PDF not available for " + i["drug_name"] + ", download skipped")
+            logging.error("Decision PDF not available for " + i["drug_name"] + "-" + i["id"] + ", download skipped")
+            i["valid"] = False
             pass
+
+    filtered_valid_results = list(filter(lambda x: x["valid"], filtered_valid_results))
 
     pdf_parser.initialize()
     for i in filtered_valid_results:
-        tables = pdf_parser.parse_target_pdf(i["drug_name"])
-        survival = table_info_extractor.get_endpoint_data(tables["Mortalität "], "Gesamtüberleben")
-        print(survival)
+        try:
+            tables = pdf_parser.parse_target_pdf(i["id"])
+
+            survival = table_info_extractor.get_endpoint_data(tables["Mortalität"], "Gesamtüberleben")
+            i["hr_survival"] = survival[0]
+            i["p_value_survival"] = survival[1]
+
+            pfs = table_info_extractor.get_endpoint_data(tables["Morbidität"], "PFS")
+            i["hr_pfs"] = pfs[0]
+            i["p_value_pfs"] = pfs[1]
+
+            i["pdf_format_supported"] = True
+        except ValueError:
+            i["pdf_format_supported"] = False
+
+    with open('convert.txt', 'w') as convert_file:
+        convert_file.write(json.dumps(filtered_valid_results))
+
+    print("end")
+    print(1234)

@@ -1,7 +1,6 @@
 import io
 import logging
 import os
-import time
 
 import configparser
 import pypdf
@@ -13,7 +12,7 @@ config = configparser.ConfigParser()
 config.read("config.ini", encoding="utf-8")
 
 
-def request_pdf_url(url_of_assessment):
+def request_assessment_url(url_of_assessment):
     # For the webpage to load normally
     headers = {
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,"
@@ -35,22 +34,26 @@ def request_pdf_url(url_of_assessment):
     conn = requests.get(url_of_assessment, headers=headers)
     doc = BeautifulSoup(conn.text, features='lxml')
     pdf_path = doc.select("*[id='beschluesse'] div div a")[0].attrs["href"]
+    company = utils.match_company_name(conn.text)
 
-    return "https://g-ba.de" + pdf_path
+    return ["https://g-ba.de" + pdf_path, company]
 
 
-def download_and_store_pdf(drug_name, pdf_url):
-    logging.info("Crawling pdf for " + drug_name)
+def download_and_store_pdf(assessment_id, pdf_url):
+    logging.info("Crawling pdf for " + assessment_id)
     pdf_storage_path = config.get("pdf_crawler", "pdf_storage_path")
 
-    t = requests.get(pdf_url, stream=True)
-    pdf = pypdf.PdfReader(io.BytesIO(t.content))
+    if os.path.exists(pdf_storage_path):
+        print("pdf exists")
+    else:
+        t = requests.get(pdf_url, stream=True)
+        pdf = pypdf.PdfReader(io.BytesIO(t.content))
 
-    # pdf_path = os.path.join(pdf_storage_path, pdf_url[0] + ".pdf")
-    # pypdf.PdfWriter(open(pdf_path, "w"), pdf)
+        # pdf_path = os.path.join(pdf_storage_path, pdf_url[0] + ".pdf")
+        # pypdf.PdfWriter(open(pdf_path, "w"), pdf)
 
-    pdf_path = os.path.join(pdf_storage_path, drug_name + ".pdf")
-    pypdf.PdfWriter(open(pdf_path, "w"), pdf).write(pdf_path)
+        pdf_path = os.path.join(pdf_storage_path, assessment_id + ".pdf")
+        pypdf.PdfWriter(open(pdf_path, "w"), pdf).write(pdf_path)
 
 
 def initialize():

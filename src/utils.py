@@ -9,6 +9,7 @@ CLEANER = re.compile('<.*?>')
 
 # used to match beträchtlich
 BETRA_MATCHER = re.compile("betr\\S*chtlich")
+COMPANY_MATCHER = re.compile(r"<strong>Pharmazeutischer Unternehmer:</strong>.*")
 
 config = configparser.ConfigParser()
 config.read("config.ini", encoding="utf-8")
@@ -88,3 +89,13 @@ def filter_invalid_entries(xml_results):
                 results.append(i)
                 break
     return results
+
+
+def match_company_name(html_text):
+    results = re.findall(COMPANY_MATCHER, html_text)
+    if results:
+        cleaned_str = cleanhtml(results[0])
+        return cleaned_str.split(":")[1]
+
+    else:
+        return "Not Found"
