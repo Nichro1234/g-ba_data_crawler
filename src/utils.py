@@ -51,7 +51,7 @@ def translate_benefit(deutsch_benefit):
     if "nicht quantifizierbar" in deutsch_benefit:
         return "Non-Quantifiable Benefit"
     if "erheblich" in deutsch_benefit:
-        return "Considerable Additional Benefit"
+        return "Considerable Benefit"
     if "gering" in deutsch_benefit:
         return "Minor Additional Benefit"
 

@@ -11,7 +11,6 @@ from docx.oxml.text.paragraph import CT_P
 from docx.table import _Cell, Table
 from docx.text.paragraph import Paragraph
 from pdf2docx import Converter
-import logging
 from itertools import chain
 
 config = configparser.ConfigParser()
