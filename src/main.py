@@ -49,6 +49,9 @@ if __name__ == '__main__':
             i["p_value_pfs"] = pfs[1]
 
             i["pdf_format_supported"] = True
+
+        # temporary solution for now. It is not appropriate to use a bare except clause without handling
+        # specifically certain types of error
         except:
             i["pdf_format_supported"] = False
 

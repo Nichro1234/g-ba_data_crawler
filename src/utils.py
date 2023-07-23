@@ -30,13 +30,13 @@ def map_arrow_to_value(arrow):
         return "No Difference"
 
     if arrow == "&uarr;&uarr;":
-        return "Significant Positive Effect"
+        return "Significant and Reliable Positive Effect"
     if arrow == "&darr;&darr;":
-        return "Significant Positive Effect"
+        return "Significant and Reliable Negative Effect"
     if arrow == "&uarr;":
-        return "Significant Positive Effect"
+        return "Positive but Unreliable Effect"
     if arrow == "&darr;":
-        return "Significant Positive Effect"
+        return "Negative but Unreliable Effect"
 
 
 def translate_benefit(deutsch_benefit):
