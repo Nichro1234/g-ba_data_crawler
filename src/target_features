@@ -1,0 +1,17 @@
+Gesamtüberleben,Mortalität,survival
+PFS,Morbidität,pfs
+Fatigue,Morbidität,fatigue
+Übelkeit und Erbrechen,Morbidität,nausea
+Schmerz,Morbidität,pain
+Dyspnoe,Morbidität,dyspnoea
+Schlaflosigkeit,Morbidität,insomnia
+Appetitlosigkeit,Morbidität,loss_appetite
+Verstopfung,Morbidität,constipation
+Diarrhö,Morbidität,diarrhoea
+globaler,Gesundheitsbezogene Lebensqualität,global_status
+Körperliche,Gesundheitsbezogene Lebensqualität,physical_func
+Rollenfunktion,Gesundheitsbezogene Lebensqualität,role_func
+Emotionale,Gesundheitsbezogene Lebensqualität,emo_func
+Kognitive,Gesundheitsbezogene Lebensqualität,cogn_func
+Soziale,Gesundheitsbezogene Lebensqualität,social_func
+SUE,Nebenwirkungen,sue

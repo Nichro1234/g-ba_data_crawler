@@ -10,6 +10,7 @@ import utils
 import xml_handler
 import table_info_extractor
 
+
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', level=logging.INFO)
 
@@ -35,25 +36,32 @@ if __name__ == '__main__':
 
     filtered_valid_results = list(filter(lambda x: x["valid"], filtered_valid_results))
 
+    features = []
+    with open("target_features", "r", encoding="utf-8") as f:
+        lines = f.readlines()
+    for i in lines:
+        features.append(i.replace("\n", "").split(","))
+
     pdf_parser.initialize()
-    for i in filtered_valid_results:
+    for i, entry in enumerate(filtered_valid_results):
         try:
-            tables = pdf_parser.parse_target_pdf(i["id"])
-
-            survival = table_info_extractor.get_endpoint_data(tables["Mortalität"], "Gesamtüberleben")
-            i["hr_survival"] = survival[0]
-            i["p_value_survival"] = survival[1]
-
-            pfs = table_info_extractor.get_endpoint_data(tables["Morbidität"], "PFS")
-            i["hr_pfs"] = pfs[0]
-            i["p_value_pfs"] = pfs[1]
-
-            i["pdf_format_supported"] = True
+            tables = pdf_parser.parse_target_pdf(entry["id"])
+            entry["pdf_format_supported"] = True
 
         # temporary solution for now. It is not appropriate to use a bare except clause without handling
         # specifically certain types of error
         except:
-            i["pdf_format_supported"] = False
+            entry["pdf_format_supported"] = False
+            continue
+
+        for j in features:
+            try:
+                _res = table_info_extractor.get_endpoint_data(tables[j[1]], j[0])
+                entry["hr_" + j[2]] = _res[0]
+                entry["p_value" + j[2]] = _res[1]
+            except:
+                entry["hr_" + j[2]] = "Data not Found"
+                entry["p_value" + j[2]] = "Data not Found"
 
     with open('convert.txt', 'w', encoding="utf-8") as convert_file:
         convert_file.write(json.dumps(filtered_valid_results))

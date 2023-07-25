@@ -10,19 +10,29 @@ def process_endpoint_result_str(result_str):
     return [i for i in num_only if i != ""]
 
 
-def get_endpoint_data(table, endpoint):
+def get_endpoint_data(table, endpoint, endpoint_alternative=None):
     if endpoint in table.keys():
         endpoint_data = table[endpoint]
         return crawl_multi_study_assessment(endpoint_data)
+
     else:
         for sub_table in table.values():
             for row in sub_table:
-                if row[0] == endpoint:
+                if row[0] == endpoint or row[0] == endpoint_alternative:
                     return process_endpoint_result_str(row[-1])
 
     for i in table.keys():
         if endpoint in i:
             return crawl_multi_study_assessment(table[i])
+
+    if endpoint_alternative is not None:
+        if endpoint_alternative in table.keys():
+            endpoint_data = table[endpoint_alternative]
+            return crawl_multi_study_assessment(endpoint_data)
+
+        for i in table.keys():
+            if endpoint_alternative in i:
+                return crawl_multi_study_assessment(table[i])
 
     return ["Data not Found", "Data not Found"]
 
